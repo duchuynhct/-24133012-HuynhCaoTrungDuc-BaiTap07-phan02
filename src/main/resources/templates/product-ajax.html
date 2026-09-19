@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Product - AJAX RESTful API</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .product-img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .navbar-brand {
+            font-weight: 700;
+        }
+        .badge-status {
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fas fa-cubes me-2 text-warning"></i>WebST2 - Bài Tập 07</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/category-ajax"><i class="fas fa-list me-1"></i> Category AJAX</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/product-ajax"><i class="fas fa-box-open me-1"></i> Product AJAX</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-info text-info px-3" href="/swagger-ui/index.html" target="_blank">
+                            <i class="fas fa-book me-1"></i> Swagger 3 UI
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-box me-2"></i>Danh Sách Sản Phẩm (Product AJAX)</h4>
+                <button class="btn btn-success" onclick="showCreateProductModal()">
+                    <i class="fas fa-plus me-2"></i>Thêm Sản Phẩm Ajax
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle" id="productTable">
+                        <thead class="table-dark text-center">
+                            <tr>
+                                <th style="width: 70px;">Id</th>
+                                <th style="width: 90px;">Ảnh</th>
+                                <th>Tên Sản Phẩm</th>
+                                <th style="width: 130px;">Đơn Giá (VNĐ)</th>
+                                <th style="width: 100px;">Giảm (%)</th>
+                                <th style="width: 90px;">SL</th>
+                                <th>Danh Mục</th>
+                                <th style="width: 110px;">Trạng Thái</th>
+                                <th style="width: 160px;">Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTableBody">
+                            <!-- Render bằng Ajax -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm Sản Phẩm -->
+    <div class="modal fade" id="createProductModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form id="addProductForm" method="post" enctype="multipart/form-data">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Thêm Sản Phẩm Mới</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Tên Sản Phẩm</label>
+                            <input type="text" class="form-control" name="productName" required placeholder="Nhập tên sản phẩm...">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Danh Mục</label>
+                            <select class="form-select categorySelect" name="categoryId" required>
+                                <option value="">-- Chọn danh mục --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Đơn Giá</label>
+                            <input type="number" class="form-control" name="unitPrice" step="1000" min="0" required placeholder="VNĐ">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Giảm Giá (%)</label>
+                            <input type="number" class="form-control" name="discount" step="0.1" min="0" max="100" value="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Số Lượng</label>
+                            <input type="number" class="form-control" name="quantity" min="1" value="1" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Ảnh Sản Phẩm</label>
+                            <input type="file" class="form-control" name="imageFile" accept="image/*">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Trạng Thái</label>
+                            <select class="form-select" name="status">
+                                <option value="1">Đang bán</option>
+                                <option value="0">Tạm ngưng</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Mô Tả Sản Phẩm</label>
+                            <textarea class="form-control" name="description" rows="3" placeholder="Mô tả chi tiết sản phẩm..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Lưu Sản Phẩm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cập Nhật Sản Phẩm -->
+    <div class="modal fade" id="updateProductModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form id="updateProductForm" method="post" enctype="multipart/form-data">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Cập Nhật Sản Phẩm</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body row g-3">
+                        <input type="hidden" id="up_productId" name="productId">
+                        
+                        <div class="col-12">
+                            <div class="d-flex align-items-center bg-light p-2 rounded">
+                                <img id="up_previewImg" class="product-img me-3" src="" alt="preview" style="display:none;">
+                                <div>
+                                    <span class="fw-bold" id="up_labelId">Mã SP: </span>
+                                    <br><small class="text-muted" id="up_labelImgName">File: </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Tên Sản Phẩm</label>
+                            <input type="text" class="form-control" id="up_productName" name="productName" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Danh Mục</label>
+                            <select class="form-select categorySelect" id="up_categoryId" name="categoryId" required>
+                                <option value="">-- Chọn danh mục --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Đơn Giá</label>
+                            <input type="number" class="form-control" id="up_unitPrice" name="unitPrice" step="1000" min="0" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Giảm Giá (%)</label>
+                            <input type="number" class="form-control" id="up_discount" name="discount" step="0.1" min="0" max="100">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Số Lượng</label>
+                            <input type="number" class="form-control" id="up_quantity" name="quantity" min="1" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Đổi Ảnh Sản Phẩm (Nếu muốn)</label>
+                            <input type="file" class="form-control" name="imageFile" accept="image/*">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Trạng Thái</label>
+                            <select class="form-select" id="up_status" name="status">
+                                <option value="1">Đang bán</option>
+                                <option value="0">Tạm ngưng</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Mô Tả Sản Phẩm</label>
+                            <textarea class="form-control" id="up_description" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-check me-1"></i>Lưu Thay Đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery & Bootstrap 5 JS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="text/javascript">
+        var categoriesCache = [];
+
+        // Load Categories vào các select dropdown
+        function loadCategoryOptions() {
+            $.getJSON('/api/category', function(response) {
+                var list = Array.isArray(response) ? response : (response.body || []);
+                categoriesCache = list;
+                var options = '<option value="">-- Chọn danh mục --</option>';
+                for (var i = 0; i < list.length; i++) {
+                    options += '<option value="' + list[i].categoryId + '">' + list[i].categoryName + '</option>';
+                }
+                $('.categorySelect').html(options);
+            });
+        }
+
+        // Load danh sách Product bằng AJAX
+        function loadProducts() {
+            $.getJSON('/api/product', function(response) {
+                var list = Array.isArray(response) ? response : (response.body || []);
+                var html = '';
+                if (list.length === 0) {
+                    html = '<tr><td colspan="9" class="text-center py-4 text-muted">Chưa có sản phẩm nào</td></tr>';
+                } else {
+                    for (var i = 0; i < list.length; i++) {
+                        var item = list[i];
+                        var imgSrc = item.images ? ('/admin/products/images/' + item.images) : 'https://via.placeholder.com/70?text=No+Img';
+                        var cateName = item.category ? item.category.categoryName : 'Chưa phân loại';
+                        var statusBadge = item.status === 1 ? '<span class="badge bg-success">Đang bán</span>' : '<span class="badge bg-secondary">Tạm ngưng</span>';
+                        var priceFormatted = Number(item.unitPrice).toLocaleString('vi-VN');
+
+                        html += '<tr>';
+                        html += '<td class="text-center fw-bold">' + item.productId + '</td>';
+                        html += '<td class="text-center"><img src="' + imgSrc + '" class="product-img" alt="' + item.productName + '"></td>';
+                        html += '<td class="fw-semibold">' + item.productName + '</td>';
+                        html += '<td class="text-end fw-bold text-danger">' + priceFormatted + ' đ</td>';
+                        html += '<td class="text-center">' + item.discount + '%</td>';
+                        html += '<td class="text-center">' + item.quantity + '</td>';
+                        html += '<td><span class="badge bg-info text-dark">' + cateName + '</span></td>';
+                        html += '<td class="text-center">' + statusBadge + '</td>';
+                        html += '<td class="text-center">';
+                        html += '<button class="btn btn-sm btn-outline-warning me-2" onclick="showEditProductModal(' + item.productId + ')"><i class="fas fa-edit"></i> Sửa</button>';
+                        html += '<button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(' + item.productId + ')"><i class="fas fa-trash"></i> Xóa</button>';
+                        html += '</td>';
+                        html += '</tr>';
+                    }
+                }
+                $('#productTableBody').html(html);
+            });
+        }
+
+        $(document).ready(function() {
+            loadCategoryOptions();
+            loadProducts();
+        });
+
+        // Mở Modal Thêm
+        function showCreateProductModal() {
+            $('#addProductForm')[0].reset();
+            var modal = new bootstrap.Modal(document.getElementById('createProductModal'));
+            modal.show();
+        }
+
+        // Submit Thêm Product
+        $("form#addProductForm").submit(function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            $.ajax({
+                url: '/api/product/addProduct',
+                type: 'POST',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(res) {
+                    bootstrap.Modal.getInstance(document.getElementById('createProductModal')).hide();
+                    loadProducts();
+                    alert('Thêm sản phẩm thành công!');
+                },
+                error: function(xhr) {
+                    alert('Lỗi: ' + (xhr.responseJSON ? xhr.responseJSON.message : xhr.responseText));
+                }
+            });
+        });
+
+        // Mở Modal Sửa Product
+        function showEditProductModal(id) {
+            $.getJSON('/api/product/' + id, function(response) {
+                var item = response.body || response;
+                $('#up_productId').val(item.productId);
+                $('#up_labelId').text("Mã SP: " + item.productId);
+                $('#up_labelImgName').text("File ảnh: " + (item.images ? item.images : "Chưa có ảnh"));
+                $('#up_productName').val(item.productName);
+                $('#up_unitPrice').val(item.unitPrice);
+                $('#up_discount').val(item.discount);
+                $('#up_quantity').val(item.quantity);
+                $('#up_description').val(item.description);
+                $('#up_status').val(item.status);
+                if (item.category) {
+                    $('#up_categoryId').val(item.category.categoryId);
+                }
+                if (item.images) {
+                    $('#up_previewImg').attr('src', '/admin/products/images/' + item.images).show();
+                } else {
+                    $('#up_previewImg').hide();
+                }
+
+                var modal = new bootstrap.Modal(document.getElementById('updateProductModal'));
+                modal.show();
+            });
+        }
+
+        // Submit Cập nhật Product
+        $("form#updateProductForm").submit(function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            $.ajax({
+                url: '/api/product/updateProduct',
+                type: 'PUT',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(res) {
+                    bootstrap.Modal.getInstance(document.getElementById('updateProductModal')).hide();
+                    loadProducts();
+                    alert('Cập nhật sản phẩm thành công!');
+                },
+                error: function(xhr) {
+                    alert('Lỗi cập nhật: ' + (xhr.responseJSON ? xhr.responseJSON.message : xhr.responseText));
+                }
+            });
+        });
+
+        // Xóa Product bằng AJAX
+        function deleteProduct(id) {
+            if (confirm('Bạn có chắc muốn xóa sản phẩm mã ' + id + '?')) {
+                $.ajax({
+                    url: '/api/product/deleteProduct?productId=' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        loadProducts();
+                        alert('Đã xóa thành công sản phẩm ' + id);
+                    },
+                    error: function(xhr) {
+                        alert('Xóa thất bại: ' + (xhr.responseJSON ? xhr.responseJSON.message : xhr.responseText));
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

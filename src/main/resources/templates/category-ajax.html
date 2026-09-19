@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Category - AJAX RESTful API</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .category-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .navbar-brand {
+            font-weight: 700;
+        }
+        .table thead {
+            background-color: #212529;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fas fa-cubes me-2 text-warning"></i>WebST2 - Bài Tập 07</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-span"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/category-ajax"><i class="fas fa-list me-1"></i> Category AJAX</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/product-ajax"><i class="fas fa-box-open me-1"></i> Product AJAX</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-info text-info px-3" href="/swagger-ui/index.html" target="_blank">
+                            <i class="fas fa-book me-1"></i> Swagger 3 UI
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-folder me-2"></i>Danh Sách Category (AJAX)</h4>
+                <button class="btn btn-success" onclick="showCreateNewCategoryModal()">
+                    <i class="fas fa-plus me-2"></i>Thêm Category Ajax
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle" id="categoryTable">
+                        <thead class="table-dark text-center">
+                            <tr>
+                                <th style="width: 80px;">Id</th>
+                                <th style="width: 120px;">Icon</th>
+                                <th>Tên Category</th>
+                                <th style="width: 160px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoryTableBody">
+                            <!-- Dữ liệu render bằng Ajax -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm Category -->
+    <div class="modal fade" id="createCategoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="addCategory" method="post" enctype="multipart/form-data">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Thêm Category</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="new_categoryname" class="form-label fw-semibold">Tên Category</label>
+                            <input type="text" class="form-control" id="new_categoryname" name="categoryName" required placeholder="Nhập tên danh mục...">
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_icon" class="form-label fw-semibold">Icon / Ảnh đại diện</label>
+                            <input type="file" class="form-control" id="new_icon" name="icon" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-success" id="btnAddCategory"><i class="fas fa-save me-1"></i>Thêm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cập nhật Category -->
+    <div class="modal fade" id="updateCategoryInfoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="updateCategory" method="post" enctype="multipart/form-data">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Cập nhật Category</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="card mb-3 bg-light border-0">
+                            <div class="card-body py-2">
+                                <div class="d-flex align-items-center">
+                                    <img id="updateCategoryPreview" class="category-img me-3" src="" alt="preview" style="display:none;">
+                                    <div>
+                                        <p class="mb-1 fw-bold text-secondary" id="updateCategoryInfoModalId">Category ID: </p>
+                                        <p class="mb-0 text-muted small" id="updateCategoryInfoModalIcon">Icon: </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="categoryId_up" name="categoryId">
+                        <div class="mb-3">
+                            <label for="categoryName_up" class="form-label fw-semibold">Tên Category Mới</label>
+                            <input type="text" class="form-control" id="categoryName_up" name="categoryName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="icon_up" class="form-label fw-semibold">Chọn Icon Mới (Nếu muốn đổi)</label>
+                            <input type="file" class="form-control" id="icon_up" name="icon" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary" id="btnUpdateCategory"><i class="fas fa-check me-1"></i>Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery & Bootstrap 5 JS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="text/javascript">
+        var contextPath = "";
+
+        // Hàm tải danh sách Category bằng AJAX
+        function loadCategories() {
+            $.getJSON(contextPath + '/api/category', function(response) {
+                var list = Array.isArray(response) ? response : (response.body || []);
+                var html = '';
+                if (list.length === 0) {
+                    html = '<tr><td colspan="4" class="text-center py-4 text-muted">Chưa có danh mục nào</td></tr>';
+                } else {
+                    for (var i = 0; i < list.length; i++) {
+                        var item = list[i];
+                        var imgSrc = item.icon ? ('/admin/categories/images/' + item.icon) : 'https://via.placeholder.com/60?text=No+Icon';
+                        html += '<tr>';
+                        html += '<td class="text-center fw-bold">' + item.categoryId + '</td>';
+                        html += '<td class="text-center"><img src="' + imgSrc + '" class="category-img" alt="' + item.categoryName + '"></td>';
+                        html += '<td class="fw-semibold">' + item.categoryName + '</td>';
+                        html += '<td class="text-center">';
+                        html += '<button class="btn btn-sm btn-outline-warning me-2" onclick="showEditCategoryModal(' + item.categoryId + ', \'' + (item.categoryName || '') + '\', \'' + (item.icon || '') + '\')"><i class="fas fa-edit"></i> Sửa</button>';
+                        html += '<button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(' + item.categoryId + ')"><i class="fas fa-trash"></i> Xóa</button>';
+                        html += '</td>';
+                        html += '</tr>';
+                    }
+                }
+                $('#categoryTableBody').html(html);
+            });
+        }
+
+        // Khởi động trang
+        $(document).ready(function() {
+            loadCategories();
+        });
+
+        // Mở Modal Thêm mới
+        function showCreateNewCategoryModal() {
+            $('#addCategory')[0].reset();
+            var modal = new bootstrap.Modal(document.getElementById('createCategoryModal'));
+            modal.show();
+        }
+
+        // Submit Thêm Category qua AJAX
+        $("form#addCategory").submit(function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            $.ajax({
+                url: contextPath + '/api/category/addCategory',
+                type: 'POST',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(res) {
+                    bootstrap.Modal.getInstance(document.getElementById('createCategoryModal')).hide();
+                    loadCategories();
+                    alert('Thêm Category thành công!');
+                },
+                error: function(xhr) {
+                    alert('Lỗi: ' + (xhr.responseJSON ? xhr.responseJSON.message : xhr.responseText));
+                }
+            });
+        });
+
+        // Mở Modal Sửa Category
+        function showEditCategoryModal(id, name, icon) {
+            $('#categoryId_up').val(id);
+            $('#categoryName_up').val(name);
+            $('#updateCategoryInfoModalId').text("Category ID: " + id);
+            $('#updateCategoryInfoModalIcon').text("Icon: " + (icon ? icon : "Chưa có"));
+            if (icon) {
+                $('#updateCategoryPreview').attr('src', '/admin/categories/images/' + icon).show();
+            } else {
+                $('#updateCategoryPreview').hide();
+            }
+            var modal = new bootstrap.Modal(document.getElementById('updateCategoryInfoModal'));
+            modal.show();
+        }
+
+        // Submit Cập nhật Category qua AJAX
+        $("form#updateCategory").submit(function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            $.ajax({
+                url: contextPath + '/api/category/updateCategory',
+                type: 'PUT',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(res) {
+                    bootstrap.Modal.getInstance(document.getElementById('updateCategoryInfoModal')).hide();
+                    loadCategories();
+                    alert('Cập nhật Category thành công!');
+                },
+                error: function(xhr) {
+                    alert('Lỗi cập nhật: ' + (xhr.responseJSON ? xhr.responseJSON.message : xhr.responseText));
+                }
+            });
+        });
+
+        // Xóa Category qua AJAX
+        function deleteCategory(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa Category ID: ' + id + '?')) {
+                $.ajax({
+                    url: contextPath + '/api/category/deleteCategory?categoryId=' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        loadCategories();
+                        alert('Đã xóa thành công Category ' + id);
+                    },
+                    error: function(xhr) {
+                        alert('Xóa thất bại: ' + (xhr.responseJSON ? xhr.responseJSON.message : xhr.responseText));
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
