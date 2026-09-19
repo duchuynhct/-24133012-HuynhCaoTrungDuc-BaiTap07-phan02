@@ -5,7 +5,7 @@
 - **Mã số sinh viên (MSSV)**: 24133012
 - **Môn học**: Lập trình Web (WEBPR330479)
 - **Giảng viên hướng dẫn**: ThS. Nguyễn Hữu Trung
-- **Khoa**: Công nghệ Thông tin - Trường Đại học Sư phạm Kỹ thuật TP.HCM (HCMUTE)
+- **Khoa**: Công nghệ Thông tin - Trường Đại học Công phạm Kỹ thuật TP.HCM (HCM-UTE)
 - **Repository GitHub**: [duchuynhct/-24133012-HuynhCaoTrungDuc-BaiTap07-phan02](https://github.com/duchuynhct/-24133012-HuynhCaoTrungDuc-BaiTap07-phan02)
 
 ---
